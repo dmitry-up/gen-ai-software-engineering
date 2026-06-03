@@ -8,7 +8,29 @@
 
 ## 📋 Project Overview
 
-A fully-featured Banking Transactions REST API built with **Node.js** and **Express.js**. The API provides in-memory storage for financial transactions with comprehensive validation, filtering, account summaries, interest calculation, CSV export, and rate limiting.
+A Banking Transactions REST API built with **Node.js** and **Express.js**. It models the core
+operations of a simple ledger: clients post **deposits**, **withdrawals**, and **transfers**, and the
+API derives everything else — per-account balances, transaction history, summaries, and interest —
+from that single stream of transactions.
+
+There is no database: transactions live in an in-memory array for the lifetime of the process, which
+keeps the project focused on API design and business logic rather than persistence. The codebase is
+split into thin transport (routes), business logic (model), input validation (validator), and
+cross-cutting concerns (rate-limiting middleware, helpers), so each task from the assignment maps to a
+clearly identifiable place in the source tree.
+
+### Key design decisions
+
+- **Balances are computed, not stored.** An account has no standalone record — its balance is the
+  reduction of every completed transaction touching it. This avoids a class of consistency bugs where a
+  stored balance drifts from the underlying transactions.
+- **Balances are grouped by currency.** Amounts in different currencies are never summed; a single
+  account can hold `USD` and `EUR` positions side by side. The API returns a `balances` map rather than
+  one figure.
+- **Validation is type-aware.** Required accounts depend on the transaction type — `deposit` needs
+  `toAccount`, `withdrawal` needs `fromAccount`, `transfer` needs both (and they must differ).
+- **Route ordering matters.** `GET /transactions/export` is declared before `GET /transactions/:id` so
+  the literal `export` segment is not captured as an `:id`.
 
 ### ✅ Implemented Tasks
 
@@ -121,13 +143,45 @@ Filters can be combined: `?accountId=ACC-12345&type=deposit`
 
 ## 🤖 AI Tools Usage
 
-This project was developed with the assistance of **Antigravity** (Google Deepmind) — an AI coding assistant integrated into the IDE. The AI was used for:
+The project was built with **Antigravity** (Google DeepMind), an AI coding assistant integrated into
+the IDE. Rather than generating the whole app from one prompt, the work was done iteratively — scaffold
+first, then one task at a time, reviewing and correcting the output at each step.
 
-- Generating the project structure and boilerplate
-- Implementing all API endpoints and business logic
-- Writing validation rules and error handling
-- Creating test files and documentation
-- Code review and testing
+### Workflow
+
+1. **Scaffold.** Asked the assistant to set up an Express project with the folder layout from the
+   assignment (`routes/`, `models/`, `validators/`, `middleware/`, `utils/`) and a runnable entry point.
+2. **Task-by-task implementation.** Each task from `TASKS.md` was a separate prompt — core endpoints,
+   then validation, then filtering, then the optional features. This kept diffs small and reviewable.
+3. **Review and correct.** Generated code was read, not blindly accepted. Several outputs needed
+   correction (see below).
+4. **Docs and demo.** README, `HOWTORUN.md`, and the `demo/` sample requests were generated last, once
+   the API behaviour was final.
+
+### Representative prompts
+
+- *"Create an Express REST API with in-memory storage for banking transactions. Endpoints: POST/GET
+  `/transactions`, GET `/transactions/:id`, GET `/accounts/:id/balance`. Follow this folder structure…"*
+- *"Add validation: amount must be positive with at most 2 decimal places, accounts match `ACC-XXXXX`,
+  currency must be a valid ISO 4217 code. Return a `{ error, details[] }` shape."*
+- *"Add query filters to GET `/transactions`: accountId, type, and a from/to date range that can be
+  combined."*
+- *"Add account summary, simple-interest, CSV export, and a 100-req/min-per-IP rate limiter."*
+
+### Where the AI needed correction
+
+- **Route ordering.** The first version put `GET /transactions/:id` before `/export`, so the export
+  endpoint was swallowed by the `:id` param. Reordered the routes manually.
+- **Single-currency balance.** The initial balance logic summed all amounts regardless of currency.
+  Prompted a rewrite to group balances per currency.
+- **Decimal-place check.** The naive `amount * 100 % 1` approach was replaced with a string-based check
+  to avoid floating-point false positives.
+
+### Takeaway
+
+The AI was strong at boilerplate, consistent error shapes, and documentation, but business rules
+(currency handling, route precedence, money rounding) still required a developer to read the output and
+push back. Small, focused prompts produced better results than one large one.
 
 <div align="center">
 
