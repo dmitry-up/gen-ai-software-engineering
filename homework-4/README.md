@@ -3,7 +3,7 @@
 > **Student**: Dmitry Upatov
 > **Course**: GenAI and Agentic AI for Software Engineering
 > **AI tools used**: Claude Code (Claude Opus 4.8) as the orchestrating agent;
-> the pipeline itself drives Claude Opus / Sonnet / Haiku per-agent.
+> the pipeline itself drives Claude Opus (verification/security) and Haiku (fixing/testing) per-agent.
 
 A four-agent pipeline that **verifies bug research → fixes the bugs → security-reviews
 the changes → generates and runs unit tests** against a small, intentionally-buggy
@@ -19,7 +19,7 @@ flowchart LR
   V --> P["Bug Planner<br/>(seed, upstream)"]
   P --> F["2. Bug Fixer<br/>haiku"]
   F --> S["3. Security Verifier<br/>opus"]
-  F --> T["4. Unit Test Generator<br/>sonnet"]
+  F --> T["4. Unit Test Generator<br/>haiku"]
 ```
 
 **Run order**: Bug Researcher → **Research Verifier** → Bug Planner → **Bug Fixer**
@@ -42,14 +42,14 @@ where the work is mechanical:
 | 1 | **Bug Research Verifier** | `agents/research-verifier.agent.md` | **opus** (`claude-opus-4-8`) | Verification is the pipeline's trust gate. A wrong root-cause judgement here corrupts every later step, so it gets the strongest reasoning model. |
 | 2 | **Bug Fixer** | `agents/bug-fixer.agent.md` | **haiku** (`claude-haiku-4-5`) | The plan already contains exact before/after code. Applying it is deterministic, low-reasoning work — the cheapest fast model is the right tool. |
 | 3 | **Security Verifier** | `agents/security-verifier.agent.md` | **opus** (`claude-opus-4-8`) | Security review is adversarial and high-impact; a missed or mis-rated vuln is costly. Strongest model. |
-| 4 | **Unit Test Generator** | `agents/unit-test-generator.agent.md` | **sonnet** (`claude-sonnet-4-6`) | More than scaffolding (must reason about equivalence classes and new boundaries) but not opus-level — Sonnet is the cost/quality sweet spot. |
+| 4 | **Unit Test Generator** | `agents/unit-test-generator.agent.md` | **haiku** (`claude-haiku-4-5`) | Test design *is* reasoning about equivalence classes and boundaries — but that reasoning now lives in the upgraded `unit-tests-FIRST` skill (explicit partitioning → boundary → error-path procedure). With the method made prescriptive, haiku executes it instead of inventing it, so the cheapest fast model suffices. |
 
 ### Skills (reusable rubrics the agents load)
 
 | Skill | File | Used by |
 |-------|------|---------|
 | **Research Quality Measurement** | `skills/research-quality-measurement.md` | Research Verifier — D1–D5 rubric, L1–L4 quality levels, required output sections. |
-| **Unit Tests — FIRST** | `skills/unit-tests-FIRST.md` | Unit Test Generator — Fast / Independent / Repeatable / Self-validating / Timely. |
+| **Unit Tests — FIRST** | `skills/unit-tests-FIRST.md` | Unit Test Generator — Fast / Independent / Repeatable / Self-validating / Timely, **plus** an explicit test-design reasoning procedure (equivalence partitioning → boundary-value analysis → error paths) so a cheaper model still achieves full coverage. |
 
 ---
 
@@ -81,7 +81,7 @@ All under `context/bugs/001/`:
 |----------|-------------|
 | `research/verified-research.md` | Research Verifier (quality **L3 RELIABLE 8/10**, catches the seeded wrong root-cause) |
 | `fix-summary.md` | Bug Fixer (3 changes, before/after, manual verification) |
-| `security-report.md` | Security Verifier (SEC-001 resolved; 1 LOW residual) |
+| `security-report.md` | Security Verifier (SEC-001 resolved; only LOW/INFO residual) |
 | `test-report.md` | Unit Test Generator (**18/18 passing**, FIRST self-check) |
 
 Seed inputs (upstream, committed): `bug-context.md`, `research/codebase-research.md`,

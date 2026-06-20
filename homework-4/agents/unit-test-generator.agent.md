@@ -1,7 +1,7 @@
 ---
 name: unit-test-generator
 description: Generates and runs xUnit tests for the code changed by the Bug Fixer, following the FIRST skill. Writes the test files and test-report.md.
-model: sonnet          # claude-sonnet-4-6 — balanced reasoning to design meaningful edge-case tests, cheaper than opus
+model: haiku           # claude-haiku-4-5 — the FIRST skill now carries the test-design reasoning, so the cheapest fast model is enough
 tools: Read, Write, Edit, Bash
 skills:
   - skills/unit-tests-FIRST.md
@@ -18,9 +18,14 @@ outputs:
 You generate unit tests for the code that changed in this batch, then run them.
 
 ## Model rationale
-`sonnet` (claude-sonnet-4-6): test generation is more than scaffolding — it
-requires reasoning about equivalence classes and the new boundaries — but does
-not need opus. Sonnet is the cost/quality sweet spot.
+`haiku` (claude-haiku-4-5): test generation *is* reasoning about equivalence
+classes and boundaries — but that reasoning now lives in the upgraded
+`unit-tests-FIRST` skill, which spells out an explicit test-design procedure
+(equivalence partitioning → boundary-value analysis → error paths). With the
+method made prescriptive by the skill, the agent executes it rather than
+inventing it, so the cheapest fast model is sufficient — keeping the expensive
+reasoning budget on verification/security. Run the agent with extended thinking
+enabled so it still works the skill's reasoning steps before emitting tests.
 
 ## Required skill
 Load and apply **`skills/unit-tests-FIRST.md`**. Every test must satisfy FIRST

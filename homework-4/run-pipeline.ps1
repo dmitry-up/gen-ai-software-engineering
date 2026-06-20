@@ -22,7 +22,7 @@ $BugDir = 'context/bugs/001'
 $ModelVerifier = 'opus'     # claude-opus-4-8   - research fact-checking
 $ModelFixer    = 'haiku'    # claude-haiku-4-5  - mechanical plan execution
 $ModelSecurity = 'opus'     # claude-opus-4-8   - security review
-$ModelTests    = 'sonnet'   # claude-sonnet-4-6 - test generation
+$ModelTests    = 'haiku'    # claude-haiku-4-5  - test generation (FIRST skill carries the reasoning)
 
 # Permission mode: acceptEdits lets agents write files unattended.
 # For a fully hands-off run, set $env:CLAUDE_PERM = '--dangerously-skip-permissions'.
@@ -55,7 +55,9 @@ You are running headless as the agent defined above. Steps:
 Operate only inside this homework-4 directory. Do not touch other homework folders.
 "@
 
-    claude -p $prompt --model $Model $ClaudePerm.Split(' ')
+    # Pipe the prompt via stdin: the agent spec starts with '---', which the CLI
+    # would otherwise parse as an option flag if passed as a positional argument.
+    $prompt | claude -p --model $Model $ClaudePerm.Split(' ')
 }
 
 Write-Host "### MiniBank 4-agent pipeline ###"

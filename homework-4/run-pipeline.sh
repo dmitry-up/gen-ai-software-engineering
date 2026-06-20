@@ -22,7 +22,7 @@ BUG_DIR="context/bugs/001"
 MODEL_VERIFIER="opus"     # claude-opus-4-8   — research fact-checking
 MODEL_FIXER="haiku"       # claude-haiku-4-5  — mechanical plan execution
 MODEL_SECURITY="opus"     # claude-opus-4-8   — security review
-MODEL_TESTS="sonnet"      # claude-sonnet-4-6 — test generation
+MODEL_TESTS="haiku"       # claude-haiku-4-5  — test generation (FIRST skill carries the reasoning)
 
 # Permission mode: acceptEdits lets agents write files unattended.
 # For a fully hands-off run (also auto-approves bash like `dotnet test`),
@@ -39,7 +39,10 @@ run_agent () {
   echo "  AGENT: $label   (model: $model)"
   echo "  spec : $agent_file"
   echo "==================================================================="
-  claude -p "$(cat "$agent_file")
+  # Pipe the prompt via stdin: the agent spec starts with '---', which the CLI
+  # would otherwise parse as an option flag if passed as a positional argument.
+  local prompt
+  prompt="$(cat "$agent_file")
 
 ---
 You are running headless as the agent defined above. Steps:
@@ -47,9 +50,8 @@ You are running headless as the agent defined above. Steps:
 2. Load and apply every file listed under 'skills:' (read it first).
 3. Perform the agent's procedure exactly.
 4. Write the file(s) listed under 'outputs'.
-Operate only inside this homework-4 directory. Do not touch other homework folders." \
-    --model "$model" \
-    $CLAUDE_PERM
+Operate only inside this homework-4 directory. Do not touch other homework folders."
+  printf '%s' "$prompt" | claude -p --model "$model" $CLAUDE_PERM
 }
 
 echo "### MiniBank 4-agent pipeline ###"
