@@ -1,0 +1,11 @@
+# .NET build output
+bin/
+obj/
+*.user
+
+# Test results
+TestResults/
+[Cc]overage*/
+
+# Local env
+.env
