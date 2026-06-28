@@ -1,0 +1,136 @@
+### ===================================================
+### Banking Transactions API - Sample Requests
+### ===================================================
+### Use with VS Code REST Client extension or similar.
+
+### --- Health Check ---
+GET http://localhost:3000/
+
+### --- Task 1: Core API ---
+
+### Create a deposit
+POST http://localhost:3000/transactions
+Content-Type: application/json
+
+{
+  "toAccount": "ACC-12345",
+  "amount": 1000.00,
+  "currency": "USD",
+  "type": "deposit"
+}
+
+### Create another deposit
+POST http://localhost:3000/transactions
+Content-Type: application/json
+
+{
+  "toAccount": "ACC-67890",
+  "amount": 500.00,
+  "currency": "USD",
+  "type": "deposit"
+}
+
+### Create a transfer
+POST http://localhost:3000/transactions
+Content-Type: application/json
+
+{
+  "fromAccount": "ACC-12345",
+  "toAccount": "ACC-67890",
+  "amount": 250.50,
+  "currency": "USD",
+  "type": "transfer"
+}
+
+### Create a withdrawal
+POST http://localhost:3000/transactions
+Content-Type: application/json
+
+{
+  "fromAccount": "ACC-67890",
+  "amount": 100.00,
+  "currency": "USD",
+  "type": "withdrawal"
+}
+
+### Create a EUR deposit
+POST http://localhost:3000/transactions
+Content-Type: application/json
+
+{
+  "toAccount": "ACC-12345",
+  "amount": 200.00,
+  "currency": "EUR",
+  "type": "deposit"
+}
+
+### Get all transactions
+GET http://localhost:3000/transactions
+
+### Get transaction by ID (replace with actual ID)
+GET http://localhost:3000/transactions/REPLACE_WITH_ACTUAL_ID
+
+### Get account balance
+GET http://localhost:3000/accounts/ACC-12345/balance
+
+### --- Task 2: Validation ---
+
+### Invalid amount (negative)
+POST http://localhost:3000/transactions
+Content-Type: application/json
+
+{
+  "toAccount": "ACC-12345",
+  "amount": -50,
+  "currency": "USD",
+  "type": "deposit"
+}
+
+### Invalid account format
+POST http://localhost:3000/transactions
+Content-Type: application/json
+
+{
+  "fromAccount": "INVALID",
+  "toAccount": "ACC-12345",
+  "amount": 100,
+  "currency": "USD",
+  "type": "transfer"
+}
+
+### Invalid currency
+POST http://localhost:3000/transactions
+Content-Type: application/json
+
+{
+  "toAccount": "ACC-12345",
+  "amount": 100,
+  "currency": "FAKE",
+  "type": "deposit"
+}
+
+### --- Task 3: Filtering ---
+
+### Filter by account
+GET http://localhost:3000/transactions?accountId=ACC-12345
+
+### Filter by type
+GET http://localhost:3000/transactions?type=transfer
+
+### Filter by date range
+GET http://localhost:3000/transactions?from=2026-01-01&to=2026-12-31
+
+### Combined filters
+GET http://localhost:3000/transactions?accountId=ACC-12345&type=deposit
+
+### --- Task 4A: Account Summary ---
+GET http://localhost:3000/accounts/ACC-12345/summary
+
+### --- Task 4B: Interest Calculation ---
+GET http://localhost:3000/accounts/ACC-12345/interest?rate=0.05&days=30
+
+### --- Task 4C: CSV Export ---
+GET http://localhost:3000/transactions/export?format=csv
+
+### --- 404 Test ---
+GET http://localhost:3000/nonexistent
